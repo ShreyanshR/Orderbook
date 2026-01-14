@@ -4,6 +4,7 @@
 #include <exception>
 #include <format>
 #include <memory>
+#include <stdexcept>
 
 #include "OrderType.h"
 #include "GlobalVariables.h"
@@ -34,6 +35,24 @@ public:
     Quantity GetRemaningQuantity() const { return remaningQuantity_; }
     Quantity GetFilledQuantity() const { return GetInitialQuantity() - GetRemaningQuantity(); }
 
+    bool IsFilled() const { return GetRemaningQuantity() == 0;}
+    
+    void Fill(Quantity quantity)
+    {
+        if (quantity > GetRemaningQuantity())
+            throw std::logic_error(std::format("Order ({}) cannot be filled for more than the remaning Quantity", GetOrderId()));
+
+        remaningQuantity_ -= quantity;
+    }
+
+    void ToGoodTillCancel(Price price){
+        if (GetOrderType() != OrderType::GoodTillCancel)
+            throw std::logic_error(std::format("Order ({}) cannot have it price adjusted, only markets order can do that", GetOrderId()));
+
+        price_ = price;
+        orderType_ = OrderType::GoodTillCancel;
+    }
+    
 private:
     OrderType orderType_;
     OrderId orderId_;
