@@ -1,7 +1,6 @@
 #pragma once
 
 #include <list>
-#include <exception>
 #include <format>
 #include <memory>
 #include <stdexcept>
@@ -52,7 +51,7 @@ public:
         price_ = price;
         orderType_ = OrderType::GoodTillCancel;
     }
-    
+
 private:
     OrderType orderType_;
     OrderId orderId_;

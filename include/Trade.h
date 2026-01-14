@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TradeInfo.h"
+#include <vector>
 
 class Trade{
     public:
@@ -17,3 +18,5 @@ class Trade{
         TradeInfo bidTrade_;
         TradeInfo askTrade_;
 };
+
+using Trades = std::vector<Trade>;
