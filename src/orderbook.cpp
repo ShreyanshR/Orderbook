@@ -1,4 +1,6 @@
 #include "Orderbook.h"
+#include "GlobalVariables.h"
+#include "Order.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -57,4 +59,42 @@ void OrderBook::PruneGoodForDayOrder()
         CancelOrders(orderIds);
 
     }
-};
+}
+
+void OrderBook::CancelOrders(OrderIds orderIds)
+{
+    std::scoped_lock ordersLock{ ordersMutex_};
+
+    for(const auto& orderId : orderIds)
+        CancelOrderInternal(orderId);
+}
+
+void OrderBook::CancelOrderInternal(OrderId orderId)
+{
+    if(!orders_.contains(orderId))
+        return;
+
+    const auto& [order, iterator] = orders_.at(orderId);
+    orders_.erase(orderId);
+    //orders_ is a unordered map of OrderPointers, 
+    // which can Shared Pointer to each OrderPointer, 
+    // and that can access to Order class, and then order class can access to GetPrice()
+    if (order->GetSide() == Side::Sell) 
+    {
+        auto price = order->GetPrice();
+        auto& orders = asks_.at(price);
+        orders.erase(iterator);
+        if(orders.empty())
+            asks_.erase(price);
+    }
+    else
+    {
+        auto price = order->GetPrice();
+        auto& orders = bids_.at(price);
+        orders.erase(iterator);
+        if(orders.empty())
+            bids_.erase(price);
+    }
+
+    OnOrderCancelled(order);
+}
